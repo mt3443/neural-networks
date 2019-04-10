@@ -63,11 +63,13 @@ class NeuralNetwork:
 
 	def backpropagation(self, x, y):
 		# implement me
+		a = 3
 
 	def train(self, x, y, epochs):
 		for i in range(epochs):
+			print('Epoch', i + 1)
 			for j in range(len(x)):
-				temp_input = x[j].flatten()
+				temp_input = x[j]
 				temp_output = np.zeros(10)
 				temp_output[y[j]] = 1
 				self.forward(temp_input)

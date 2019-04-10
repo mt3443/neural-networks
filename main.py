@@ -1,12 +1,11 @@
-import pickle
+from mnist import MNIST
 import numpy as np
 from nn import NeuralNetwork
 
-mnist_data = pickle.load(open('data/mnist.p', 'rb'))
-digits_train = mnist_data[0] / 255
-labels_train = mnist_data[1]
-digits_test = mnist_data[2] / 255
-labels_test = mnist_data[3]
+mndata = MNIST('data/')
+mndata.gz = True
+digits_train, labels_train = mndata.load_training()
+digits_test, labels_test = mndata.load_testing()
 
 n_input_nodes = 784
 n_output_nodes = 10
