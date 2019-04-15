@@ -62,46 +62,46 @@ class NeuralNetwork:
 
 		self.activations[-1] = sigmoid(np.dot(self.activations[-2], self.weights[-1]))
 
-	def calculate_error(self, y):
-		error = 0
-
-		for i in range(self.n_output_nodes):
-			error += 0.5 * ((self.activations[-1][i] - y[i]) ** 2)
-
-		return error
+	def get_error(self, y):
+		return np.sum(0.5 * np.square(y - self.activations[-1]))
 
 	def backpropagation(self, x, y):
-		error = (y - self.activations[-1]) * sigmoid_derivative(self.activations[-1])
+		output_delta = (y - self.activations[-1]) * sigmoid_derivative(self.activations[-1])
+		hidden_delta = (np.dot(output_delta, self.weights[1].T)) * sigmoid_derivative(self.activations[0])
+		self.weights[0] += np.dot(x.T, hidden_delta)
+		self.weights[1] += np.dot(self.activations[0].T, output_delta)
 
-		a = np.dot(error, self.weights[1].T) * sigmoid_derivative(self.activations[0])
-		dw1 = np.dot(x, a)
-		dw2 = np.dot(self.activations[0], error)
+	def train(self, x, y, epochs=1000, batch_size=500):
 
-		self.weights[0] += dw1
-		self.weights[1] += dw2
-
-	def train(self, x, y, epochs, batch_size=500):
+		# normalize inputs
+		x = np.array(x)
+		x = x / np.amax(x)
 
 		for i in range(epochs):
-			print('Epoch', i + 1)
+			i % 100 == 0 and print(i)
 
 			# get a batch
-			inputs, outputs = self.getBatch(x, y, batch_size)
-
-			# normalize inputs
-			temp_inputs = np.array(inputs) / 255
+			inputs, temp_outputs = self.getBatch(x, y, batch_size)
 
 			# convert outputs to one hot
-			temp_outputs = []
+			outputs = []
 			for j in range(batch_size):
 				a = np.zeros(self.n_output_nodes, dtype=np.int8)
-				a[outputs[j]] = 1
-				temp_outputs.append(a)
+				a[temp_outputs[j]] = 1
+				outputs.append(a)
 
 			# train network
-			for j in range(batch_size):
-				self.feedforward(temp_inputs[j])
-				self.backpropagation(temp_inputs[j], temp_outputs[j])
+			self.feedforward(inputs)
+			self.backpropagation(inputs, outputs)
+
+			if i % 100 == 0:
+				predicted = []
+				for j in range(len(inputs)):
+					predicted.append(self.predict(inputs[j]))
+				print('actual:\t\t', temp_outputs)
+				print('predicted:\t', predicted)
+				print('')
+
 
 	def getBatch(self, x,  y, batch_size):
 		inputs = []
@@ -113,7 +113,8 @@ class NeuralNetwork:
 			inputs.append(x[index])
 			outputs.append(y[index])
 
-		return inputs, outputs
+		#return np.array(inputs), outputs
+		return np.array(x), outputs
 
 	def predict(self, x):
 		self.feedforward(x)
