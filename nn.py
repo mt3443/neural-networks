@@ -11,7 +11,14 @@ def sigmoid_derivative(x):
 
 class NeuralNetwork:
 
-	# hidden_layers = array of ints, index = layer number, int = number of nodes in that layer
+	# description: neural network (multilayer perceptron) constructor
+	# param: n_input_nodes (int), number of input nodes
+	# param: n_output_nodes (int), number of output nodes
+	# param: hidden_layers (list of ints), representation of the hidden layers.
+	#        the number of elements in the list is the number of hidden layers.
+	#        the value at each index is the number of nodes in that layer.
+	# param: weights (3d array of floats), neural network weights, meant to be
+	#        used to load a previously trained model
 	def __init__(self, n_input_nodes, n_output_nodes, hidden_layers, weights=None):
 		self.n_input_nodes = n_input_nodes
 		self.n_output_nodes = n_output_nodes
@@ -26,6 +33,7 @@ class NeuralNetwork:
 			# ensure given weights match network dimensions
 			self.checkWeights()
 
+	# description: randomly initializes network weights 
 	def getInitialWeights(self):
 		weights = []
 
@@ -45,6 +53,7 @@ class NeuralNetwork:
 
 		return np.array(weights)
 
+	# description: verifies that given weights match the shape of the neural network
 	def checkWeights(self):
 		expected_weights = self.getInitialWeights()
 
@@ -55,6 +64,9 @@ class NeuralNetwork:
 			if expected_weights[i].shape != self.weights[i].shape:
 				sys.exit('Error: given weights do not match neural network dimensions')
 
+	# description: implementation of feedforward algorithm. given an input, this produces
+	#              the neural network's output
+	# param: x (list of floats), neural network input vector
 	def feedforward(self, x):
 		self.activations[0] = sigmoid(np.dot(x, self.weights[0]))
 		
@@ -63,9 +75,11 @@ class NeuralNetwork:
 
 		self.activations[-1] = sigmoid(np.dot(self.activations[-2], self.weights[-1]))
 
-	def get_error(self, y):
-		return np.sum(0.5 * np.square(y - self.activations[-1]))
-
+	# description: implementation of backpropagation algorithm. this function "trains" the
+	#              neural network. errors between produced and expected output backpropagate
+	#              through the neural network and adjust weights
+	# param: x (list of floats), neural network input
+	# param: y (list of floats), expected neural network output
 	def backpropagation(self, x, y):
 		deltas = []
 
@@ -89,6 +103,11 @@ class NeuralNetwork:
 
 			self.weights[i] += np.dot(layer, delta)
 
+	# description: top-level function that trains the neural network
+	# param: x (list of inputs), training data inputs
+	# param: y (list of outputs), training data outputs
+	# param: epochs (int), number of times the neural network is trained
+	# param: batch_size (int), number of input samples to use in each epoch
 	def train(self, x, y, epochs=1000, batch_size=500):
 
 		# normalize inputs
@@ -117,6 +136,13 @@ class NeuralNetwork:
 
 		print('Training complete')
 
+		# save network weights
+		pickle.dump(self.weights, open('pickle/mnist_weights.p', 'wb'))
+
+	# description: selects a random set of training samples
+	# param: x (list of inputs), training data inputs
+	# param: y (list of outputs), training data outputs
+	# param: batch_size (int), number of samples to return
 	def getBatch(self, x,  y, batch_size):
 		inputs = []
 		outputs = []
@@ -129,10 +155,16 @@ class NeuralNetwork:
 
 		return np.array(inputs), outputs
 
+	# description: classifies handwritten digit inputs
+	# param: x (list of floats), neural network input sample
 	def predict(self, x):
 		self.feedforward(x)
 		return np.argmax(self.activations[-1])
 
+	# description: checks the accuracy of the neural network.
+	#              tests the network on given testing data
+	# param: x (list of inputs), testing data inputs
+	# param: y (list of outputs), testing data outputs
 	def test(self, x, y):
 		# counter recording number of correct classifications
 		correct = 0
@@ -141,7 +173,6 @@ class NeuralNetwork:
 		x = np.array(x)
 		x = x / np.amax(x)
 
-		# list to record incorrectly classified images
 		incorrect = []
 
 		# classify test data
@@ -152,6 +183,9 @@ class NeuralNetwork:
 			else:
 				incorrect.append(i)
 
-		pickle.dump(incorrect, open('incorrect.p', 'wb'))
+		# record which inputs were incorrectly classified
+		pickle.dump(incorrect, open('pickle/mnist_incorrect.p', 'wb'))
 
 		print('Accuracy:', correct / len(x))
+
+np.warnings.filterwarnings('ignore')

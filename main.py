@@ -12,7 +12,7 @@ hidden_layers = [16, 16]
 
 n = NeuralNetwork(n_input_nodes, n_output_nodes, hidden_layers)
 
-n_epochs = 2000
-n.train(train_input, train_output, n_epochs, batch_size=1000)
+n_epochs = 1000
+n.train(train_input, train_output, n_epochs, batch_size=6000)
 
 n.test(test_input, test_output)
