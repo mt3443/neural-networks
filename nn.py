@@ -68,8 +68,21 @@ class NeuralNetwork:
 	def backpropagation(self, x, y):
 		output_delta = (y - self.activations[-1]) * sigmoid_derivative(self.activations[-1])
 		hidden_delta = (np.dot(output_delta, self.weights[1].T)) * sigmoid_derivative(self.activations[0])
-		self.weights[0] += np.dot(x.T, hidden_delta)
-		self.weights[1] += np.dot(self.activations[0].T, output_delta)
+
+		x_t = x
+		x_t.shape = (len(x), 1)
+
+		hidden_delta_t = hidden_delta
+		hidden_delta_t.shape = (1, len(hidden_delta))
+
+		hidden_layer_t = self.activations[0]
+		hidden_layer_t.shape = (len(self.activations[0]), 1)
+
+		output_delta_t = output_delta
+		output_delta_t.shape = (1, len(output_delta))
+
+		self.weights[0] += np.dot(x_t, hidden_delta_t)
+		self.weights[1] += np.dot(hidden_layer_t, output_delta_t)
 
 	def train(self, x, y, epochs=1000, batch_size=500):
 
@@ -77,22 +90,27 @@ class NeuralNetwork:
 		x = np.array(x)
 		x = x / np.amax(x)
 
-		for i in range(epochs):
-			i % 100 == 0 and print(i)
+		print('Training started\nBatch size:{}\nTotal epochs:{}'.format(batch_size, epochs))
 
-			# get a batch
+		for i in range(epochs):
+			i % 100 == 0 and print('Current epoch: {}'.format(i))
+
+			# get a random batch
 			inputs, temp_outputs = self.getBatch(x, y, batch_size)
 
-			# convert outputs to one hot
+			# convert outputs to one hot notation
 			outputs = []
 			for j in range(batch_size):
 				a = np.zeros(self.n_output_nodes, dtype=np.int8)
 				a[temp_outputs[j]] = 1
 				outputs.append(a)
 
-			# train network
-			self.feedforward(inputs)
-			self.backpropagation(inputs, outputs)
+			# train the network on current batch
+			for j in range(len(inputs)):
+				self.feedforward(inputs[j])
+				self.backpropagation(inputs[j], outputs[j])
+
+		print('Training complete')
 
 	def getBatch(self, x,  y, batch_size):
 		inputs = []
@@ -109,3 +127,19 @@ class NeuralNetwork:
 	def predict(self, x):
 		self.feedforward(x)
 		return np.argmax(self.activations[-1])
+
+	def test(self, x, y):
+		# counter recording number of correct classifications
+		correct = 0
+
+		# normalize inputs
+		x = np.array(x)
+		x = x / np.amax(x)
+
+		# classify test data
+		for i in range(len(x)):
+			prediction = self.predict(x[i])
+			if prediction == y[i]:
+				correct += 1
+
+		print('Accuracy:', correct / len(x))
