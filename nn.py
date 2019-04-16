@@ -1,6 +1,7 @@
 import random
 import numpy as np
 import sys
+import pickle
 
 def sigmoid(x):
 	return 1 / (1 + np.exp(-x))
@@ -66,23 +67,27 @@ class NeuralNetwork:
 		return np.sum(0.5 * np.square(y - self.activations[-1]))
 
 	def backpropagation(self, x, y):
-		output_delta = (y - self.activations[-1]) * sigmoid_derivative(self.activations[-1])
-		hidden_delta = (np.dot(output_delta, self.weights[1].T)) * sigmoid_derivative(self.activations[0])
+		deltas = []
 
-		x_t = x
-		x_t.shape = (len(x), 1)
+		deltas.append((y - self.activations[-1]) * sigmoid_derivative(self.activations[-1]))
 
-		hidden_delta_t = hidden_delta
-		hidden_delta_t.shape = (1, len(hidden_delta))
+		for i in range(len(self.hidden_layers), 0, -1):
+			deltas.append((np.dot(deltas[-1], self.weights[i].T)) * sigmoid_derivative(self.activations[i - 1]))
+			
+		deltas.reverse()
 
-		hidden_layer_t = self.activations[0]
-		hidden_layer_t.shape = (len(self.activations[0]), 1)
+		for i in range(len(self.weights)):
+			if i == 0:
+				layer = x
+			else:
+				layer = self.activations[i - 1]
 
-		output_delta_t = output_delta
-		output_delta_t.shape = (1, len(output_delta))
+			layer.shape = (len(layer), 1)
 
-		self.weights[0] += np.dot(x_t, hidden_delta_t)
-		self.weights[1] += np.dot(hidden_layer_t, output_delta_t)
+			delta = deltas[i]
+			delta.shape = (1, len(delta))
+
+			self.weights[i] += np.dot(layer, delta)
 
 	def train(self, x, y, epochs=1000, batch_size=500):
 
@@ -90,7 +95,7 @@ class NeuralNetwork:
 		x = np.array(x)
 		x = x / np.amax(x)
 
-		print('Training started\nBatch size:{}\nTotal epochs:{}'.format(batch_size, epochs))
+		print('Training started\nBatch size: {}\nTotal epochs: {}'.format(batch_size, epochs))
 
 		for i in range(epochs):
 			i % 100 == 0 and print('Current epoch: {}'.format(i))
@@ -136,10 +141,17 @@ class NeuralNetwork:
 		x = np.array(x)
 		x = x / np.amax(x)
 
+		# list to record incorrectly classified images
+		incorrect = []
+
 		# classify test data
 		for i in range(len(x)):
 			prediction = self.predict(x[i])
 			if prediction == y[i]:
 				correct += 1
+			else:
+				incorrect.append(i)
+
+		pickle.dump(incorrect, open('incorrect.p', 'wb'))
 
 		print('Accuracy:', correct / len(x))
