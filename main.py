@@ -8,7 +8,7 @@ test_input, test_output = mndata.load_testing()
 
 n_input_nodes = 784
 n_output_nodes = 10
-hidden_layers = [16, 16]
+hidden_layers = [100]
 
 n = NeuralNetwork(n_input_nodes, n_output_nodes, hidden_layers)
 

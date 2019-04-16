@@ -117,7 +117,7 @@ class NeuralNetwork:
 		print('Training started\nBatch size: {}\nTotal epochs: {}'.format(batch_size, epochs))
 
 		for i in range(epochs):
-			i % 100 == 0 and print('Current epoch: {}'.format(i))
+			i % (epochs / 100) == 0 and print('\r{}% complete...'.format(int(100 * i / epochs)), end='')
 
 			# get a random batch
 			inputs, temp_outputs = self.getBatch(x, y, batch_size)
@@ -134,7 +134,7 @@ class NeuralNetwork:
 				self.feedforward(inputs[j])
 				self.backpropagation(inputs[j], outputs[j])
 
-		print('Training complete')
+		print('\nTraining complete')
 
 		# save network weights
 		pickle.dump(self.weights, open('pickle/mnist_weights.p', 'wb'))
@@ -166,6 +166,7 @@ class NeuralNetwork:
 	# param: x (list of inputs), testing data inputs
 	# param: y (list of outputs), testing data outputs
 	def test(self, x, y):
+
 		# counter recording number of correct classifications
 		correct = 0
 
@@ -186,6 +187,6 @@ class NeuralNetwork:
 		# record which inputs were incorrectly classified
 		pickle.dump(incorrect, open('pickle/mnist_incorrect.p', 'wb'))
 
-		print('Accuracy:', correct / len(x))
+		print('Testing accuracy:', correct / len(x))
 
 np.warnings.filterwarnings('ignore')
