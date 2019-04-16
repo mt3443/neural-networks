@@ -94,15 +94,6 @@ class NeuralNetwork:
 			self.feedforward(inputs)
 			self.backpropagation(inputs, outputs)
 
-			if i % 100 == 0:
-				predicted = []
-				for j in range(len(inputs)):
-					predicted.append(self.predict(inputs[j]))
-				print('actual:\t\t', temp_outputs)
-				print('predicted:\t', predicted)
-				print('')
-
-
 	def getBatch(self, x,  y, batch_size):
 		inputs = []
 		outputs = []
@@ -113,8 +104,7 @@ class NeuralNetwork:
 			inputs.append(x[index])
 			outputs.append(y[index])
 
-		#return np.array(inputs), outputs
-		return np.array(x), outputs
+		return np.array(inputs), outputs
 
 	def predict(self, x):
 		self.feedforward(x)
