@@ -19,26 +19,33 @@ class NeuralNetwork:
 	#        the value at each index is the number of nodes in that layer.
 	# param: weights (3d array of floats), neural network weights, meant to be
 	#        used to load a previously trained model
-	def __init__(self, n_input_nodes, n_output_nodes, hidden_layers, weights=None):
+	def __init__(self, n_input_nodes=None, n_output_nodes=None, hidden_layers=None, weights=None):
+		if n_input_nodes is None and n_output_nodes is None and hidden_layers is None and weights is None:
+			sys.exit('Error! You must specify neural network dimensions (n_input_nodes, n_output_nodes, hidden_layers) or pass in an array of weights')
+		
 		self.n_input_nodes = n_input_nodes
 		self.n_output_nodes = n_output_nodes
 		self.hidden_layers = hidden_layers
-		self.activations = [None] * (len(hidden_layers) + 1)
 		self.weights = weights
 
 		# assign initial weights if none are given (i.e. if network is not trained)
 		if weights is None:
 			self.weights = self.getInitialWeights()
 		else:
-			# ensure given weights match network dimensions
-			self.checkWeights()
+			# set network dimensions to match given weights
+			self.n_input_nodes = weights[0].shape[0]
+			self.n_output_nodes = weights[-1].shape[1]
+
+			self.hidden_layers = []
+			for i in range(len(weights) - 1):
+				self.hidden_layers.append(weights[i].shape[1])
+
+		self.activations = [None] * (len(self.hidden_layers) + 1)
+
 
 	# description: randomly initializes network weights 
 	def getInitialWeights(self):
 		weights = []
-
-		# seed rng for reproducible results
-		np.random.seed(1)
 
 		for i in range(len(self.hidden_layers) + 1):
 			if i == 0:
@@ -48,21 +55,8 @@ class NeuralNetwork:
 			else:
 				weights.append(np.random.randn(self.hidden_layers[-1], self.n_output_nodes))
 
-		# reset rng (deseed)
-		np.random.seed()
-
 		return np.array(weights)
 
-	# description: verifies that given weights match the shape of the neural network
-	def checkWeights(self):
-		expected_weights = self.getInitialWeights()
-
-		if expected_weights.shape != self.weights.shape:
-			sys.exit('Error: given weights do not match neural network dimensions')
-
-		for i in range(len(self.weights)):
-			if expected_weights[i].shape != self.weights[i].shape:
-				sys.exit('Error: given weights do not match neural network dimensions')
 
 	# description: implementation of feedforward algorithm. given an input, this produces
 	#              the neural network's output
@@ -75,35 +69,42 @@ class NeuralNetwork:
 
 		self.activations[-1] = sigmoid(np.dot(self.activations[-2], self.weights[-1]))
 
+
 	# description: implementation of backpropagation algorithm. this function "trains" the
 	#              neural network. errors between produced and expected output backpropagate
 	#              through the neural network and adjust weights
 	# param: x (list of floats), neural network input
 	# param: y (list of floats), expected neural network output
 	def backpropagation(self, x, y):
+
+		# record errors in each layer, starting with output layer
 		deltas = []
-
 		deltas.append((y - self.activations[-1]) * sigmoid_derivative(self.activations[-1]))
-
 		for i in range(len(self.hidden_layers), 0, -1):
 			deltas.append((np.dot(deltas[-1], self.weights[i].T)) * sigmoid_derivative(self.activations[i - 1]))
-			
 		deltas.reverse()
 
+		# for every set of weights in the network
 		for i in range(len(self.weights)):
+
+			# get current layer
 			if i == 0:
 				layer = x
 			else:
 				layer = self.activations[i - 1]
 
-			layer.shape = (len(layer), 1)
-
+			# get corresponding error
 			delta = deltas[i]
+
+			# force matrix dimensions to be compatible with dot product
+			layer.shape = (len(layer), 1)
 			delta.shape = (1, len(delta))
 
+			# update weights
 			self.weights[i] += np.dot(layer, delta)
 
-	# description: top-level function that trains the neural network
+
+	# description: top-level function that trains the neural network using SGD
 	# param: x (list of inputs), training data inputs
 	# param: y (list of outputs), training data outputs
 	# param: epochs (int), number of times the neural network is trained
@@ -111,10 +112,12 @@ class NeuralNetwork:
 	def train(self, x, y, epochs=1000, batch_size=500):
 
 		# normalize inputs
+		print('Normalizing input data...', end=' ', flush=True)
 		x = np.array(x)
 		x = x / np.amax(x)
+		print('done', flush=True)
 
-		print('Training started\nBatch size: {}\nTotal epochs: {}'.format(batch_size, epochs))
+		print('Training started with batch_size={} and epochs={}'.format(batch_size, epochs), flush=True)
 
 		for i in range(epochs):
 			i % (epochs / 100) == 0 and print('\r{}% complete...'.format(int(100 * i / epochs)), end='')
@@ -137,7 +140,13 @@ class NeuralNetwork:
 		print('\nTraining complete')
 
 		# save network weights
-		pickle.dump(self.weights, open('pickle/mnist_weights.p', 'wb'))
+		h = str(self.hidden_layers[0])
+		for i in range(len(self.hidden_layers) - 1):
+			h = h + 'x' + str(self.hidden_layers[i + 1])
+		file_path = 'pickle/' + h + '_mnist_weights.p'
+		print('Saving weights to', file_path)
+		pickle.dump(self.weights, open(file_path, 'wb'))
+
 
 	# description: selects a random set of training samples
 	# param: x (list of inputs), training data inputs
@@ -155,11 +164,13 @@ class NeuralNetwork:
 
 		return np.array(inputs), outputs
 
+
 	# description: classifies handwritten digit inputs
 	# param: x (list of floats), neural network input sample
 	def predict(self, x):
 		self.feedforward(x)
 		return np.argmax(self.activations[-1])
+
 
 	# description: checks the accuracy of the neural network.
 	#              tests the network on given testing data
@@ -185,8 +196,11 @@ class NeuralNetwork:
 				incorrect.append(i)
 
 		# record which inputs were incorrectly classified
+		print('Saving indices of missed samples in \'pickle/mnist_incorrect.p\'')
 		pickle.dump(incorrect, open('pickle/mnist_incorrect.p', 'wb'))
 
 		print('Testing accuracy:', correct / len(x))
 
+
+# suppress occasional np overflow warnings
 np.warnings.filterwarnings('ignore')
