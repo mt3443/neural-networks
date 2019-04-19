@@ -109,7 +109,7 @@ class NeuralNetwork:
 	# param: y (list of outputs), training data outputs
 	# param: epochs (int), number of times the neural network is trained
 	# param: batch_size (int), number of input samples to use in each epoch
-	def train(self, x, y, epochs=1000, batch_size=500):
+	def train(self, x, y, epochs, batch_size):
 
 		# normalize inputs
 		print('Normalizing input data...', end=' ', flush=True)
@@ -141,11 +141,12 @@ class NeuralNetwork:
 
 		# save network weights
 		h = str(self.hidden_layers[0])
+		t = 'mnist/' if self.n_output_nodes == 10 else 'chars74k/'
 		for i in range(len(self.hidden_layers) - 1):
 			h = h + 'x' + str(self.hidden_layers[i + 1])
-		file_path = 'pickle/' + h + '_mnist_weights.p'
-		print('Saving weights to', file_path)
+		file_path = 'weights/' + t + h + '.p'
 		pickle.dump(self.weights, open(file_path, 'wb'))
+		print('Weights saved to \'' + file_path + '\'')
 
 
 	# description: selects a random set of training samples
@@ -196,8 +197,13 @@ class NeuralNetwork:
 				incorrect.append(i)
 
 		# record which inputs were incorrectly classified
-		print('Saving indices of missed samples in \'pickle/mnist_incorrect.p\'')
-		pickle.dump(incorrect, open('pickle/mnist_incorrect.p', 'wb'))
+		h = str(self.hidden_layers[0])
+		t = 'mnist/' if self.n_output_nodes == 10 else 'chars74k/'
+		for i in range(len(self.hidden_layers) - 1):
+			h = h + 'x' + str(self.hidden_layers[i + 1])
+		file_path = 'incorrect/' + t + h + '.p'
+		pickle.dump(incorrect, open(file_path, 'wb'))
+		print('Incorrectly classified sample indices saved to \'' + file_path + '\'')
 
 		print('Testing accuracy:', correct / len(x))
 
