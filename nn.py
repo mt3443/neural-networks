@@ -75,7 +75,8 @@ class NeuralNetwork:
 	#              through the neural network and adjust weights
 	# param: x (list of floats), neural network input
 	# param: y (list of floats), expected neural network output
-	def backpropagation(self, x, y):
+	# param: learning_rate (float), how large of an adjustment to make to the weights
+	def backpropagation(self, x, y, learning_rate):
 
 		# record errors in each layer, starting with output layer
 		deltas = []
@@ -101,7 +102,7 @@ class NeuralNetwork:
 			delta.shape = (1, len(delta))
 
 			# update weights
-			self.weights[i] += np.dot(layer, delta)
+			self.weights[i] += learning_rate * np.dot(layer, delta)
 
 
 	# description: top-level function that trains the neural network using SGD
@@ -109,7 +110,8 @@ class NeuralNetwork:
 	# param: y (list of outputs), training data outputs
 	# param: epochs (int), number of times the neural network is trained
 	# param: batch_size (int), number of input samples to use in each epoch
-	def train(self, x, y, epochs, batch_size):
+	# param: learning_rate (float), how large of an adjustment to make on each epoch
+	def train(self, x, y, epochs, batch_size, learning_rate=1):
 
 		# normalize inputs
 		print('Normalizing input data...', end=' ', flush=True)
@@ -135,7 +137,7 @@ class NeuralNetwork:
 			# train the network on current batch
 			for j in range(len(inputs)):
 				self.feedforward(inputs[j])
-				self.backpropagation(inputs[j], outputs[j])
+				self.backpropagation(inputs[j], outputs[j], learning_rate)
 
 		print('\nTraining complete')
 
