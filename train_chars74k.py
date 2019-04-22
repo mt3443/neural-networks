@@ -15,7 +15,7 @@ n_output_nodes = 52
 # example: for a hidden layer of 50 nodes
 #          followed by a hidden layer of 25
 #          nodes, write: hidden_layers = [50, 25]
-hidden_layers = [128, 64]
+hidden_layers = [100]
 
 # create neural network
 print('Creating neural network...', end=' ', flush=True)

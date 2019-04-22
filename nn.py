@@ -117,7 +117,7 @@ class NeuralNetwork:
 		x = x / np.amax(x)
 		print('done', flush=True)
 
-		print('Training started with batch_size={} and epochs={}'.format(batch_size, epochs), flush=True)
+		print('Training started with batch_size={}, epochs={}, hidden_layers={}'.format(batch_size, epochs, self.hidden_layers), flush=True)
 
 		for i in range(epochs):
 			i % (epochs / 100) == 0 and print('\r{}% complete...'.format(int(100 * i / epochs)), end='')
@@ -205,7 +205,7 @@ class NeuralNetwork:
 		pickle.dump(incorrect, open(file_path, 'wb'))
 		print('Incorrectly classified sample indices saved to \'' + file_path + '\'')
 
-		print('Testing accuracy:', correct / len(x))
+		print('Testing accuracy:', round(correct / len(x), 5))
 
 
 # suppress occasional np overflow warnings
