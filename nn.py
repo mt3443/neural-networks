@@ -140,6 +140,14 @@ class NeuralNetwork:
 				self.backpropagation(inputs[j], outputs[j], learning_rate)
 
 		print('\nTraining complete')
+		
+		correct = 0
+		verification_inputs, verification_outputs = self.getBatch(x, y, batch_size)
+		for i in range(len(verification_inputs)):
+			prediction = self.predict(verification_inputs[i])
+			if prediction == verification_outputs[i]:
+				correct += 1
+		print('Training accuracy:', round(correct / len(verification_inputs), 5))
 
 		# save network weights
 		h = str(self.hidden_layers[0])
