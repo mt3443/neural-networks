@@ -20,7 +20,7 @@ pip3 install numpy python-mnist
 ```
 Once the dependencies are installed, we can create neural networks. **Note: Trained neural networks are saved in this repository. There is no need to train them yourself.** However, if you would like to train the neural network yourself, you can do so with the following commands.
 
-**Important: To change the number of hidden layers and the number of nodes in each hidden layer, you must edit the 'hidden_layers' variable in `train_mnist.py` or `train_chars74k.py`. You can also edit the batch size and number of epochs to achieve different results.**
+**Important: To change the number of hidden layers and the number of nodes in each hidden layer, you must edit the 'hidden_layers' variable in `train_mnist.py` or `train_chars74k.py`. You can also edit the batch size and number of epochs used for training to achieve different results.**
 
 To train a model with the MNIST dataset:
 ```
@@ -32,4 +32,22 @@ To train a model with the Chars74k dataset:
 python3 train_chars74k.py
 ```
 
-The commands above generate pickled files containing the weights used by the neural networks. Take note of the file path  To test the neural networks, you can run the following scripts
+The commands above generate pickled files containing the weights used by the neural networks. Take note of the file path that is printed after training completes, as it is required for testing. To test the neural networks, you can execute the following commands:
+```
+python3 test_mnist.py <path to MNIST weights file>
+```
+
+or
+```
+python3 test_chars74k.py <path to Chars74k weights file>
+```
+
+Examples:
+```
+python3 test_mnist.py weights/mnist/100.p
+```
+
+and
+```
+python3 test_chars74k.py weights/chars74k/50x50.p
+```
